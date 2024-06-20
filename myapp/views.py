@@ -4,11 +4,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.postgres.search import SearchVector
 from django.contrib.postgres.search import TrigramSimilarity
-from .models import Department, OS, User, ComputerLaptop, Basis, Server,\
-                    ATM, PermissionType, UserPermission, Socket, AppService
-from .serializers import OSSerializer, ComputerLaptopSerializer, ATMSerializer, \
-    BasisSerializer, DepartmentSerializer, UserSerializer, ServerSerializer, PermissionTypeSerializer,\
-    UserPermissionSerializer, SocketSerializer, AppServiceSerializer
+from .models import Department, OS, User, Hardware, Basis, \
+    ATM, PermissionType, UserPermission, Service, Backend, DataBase, Frontend, AT, Host
+from .serializers import OSSerializer, HardwareSerializer, ATMSerializer, \
+    BasisSerializer, DepartmentSerializer, UserSerializer, PermissionTypeSerializer,\
+    UserPermissionSerializer, ServiceSerializer, BackendSerializer, DataBaseSerializer, \
+    FrontendSerializer, ATSerializer, HostSerializer
 from .permissions import IsSuperPermission, IsReadOnlyPermission
 
 
@@ -19,14 +20,14 @@ class DepartmentList(APIView):
         query = Department.objects.all()
         serializer = DepartmentSerializer(query, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializer = DepartmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class DepartmentSearchView(APIView):
     permission_classes = [IsAuthenticated]
@@ -118,8 +119,12 @@ class UserDetail(APIView):
         serializer = UserSerializer(user)
         return Response(serializer.data)
     """
-    Qachonki foydalanuvchini ma'lumotlarinni o'zgartirmoqchi bo'linsa qyyidagilar majburiy 
-    first_name, last_name va role.
+    Qachonki foydalanuvchini ma'lumotlarinni o'zgartirmoqchi bo'linsa quyidagilar majburiy 
+    {
+        "first_name":"Bektosh", 
+        "last_name": "Salimov",
+         "role": "Admin"
+    }
     """
     def put(self, request, pk):
         user = self.get_object(pk)
@@ -135,6 +140,8 @@ class UserDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+"""
+==(Server Model'i o'chirilib tashlandi)==
 class ServerList(APIView):
 
     def get(self, request):
@@ -148,7 +155,7 @@ class ServerList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class ServerSearchView(APIView):
     permission_classes = [IsAuthenticated]
@@ -178,15 +185,15 @@ class ServerDetail(APIView):
         server = self.get_object(pk)
         serialilizer = ServerSerializer(server)
         return Response(serialilizer.data)
-    """
-    PUT http://127.0.0.1:8000/servers/<int:pk>/
-    Qachonki serverni ma'lumotlari o'zgartirilayotsa shularni berish majburiy.
-    {
-    "server_name": "iABS Prod",
-    "ip_address": "172.16.50.172",
-    "server_role": "Raqamli bank"
-    }
-    """
+        
+    # PUT http://127.0.0.1:8000/servers/<int:pk>/
+    # Qachonki serverni ma'lumotlari o'zgartirilayotsa shularni berish majburiy.
+    # {
+    # "server_name": "iABS Prod",
+    # "ip_address": "172.16.50.172",
+    # "server_role": "Raqamli bank"
+    # }
+    
     def put(self, request, pk):
         server = self.get_object(pk)
         serializer = ServerSerializer(server, data=request.data)
@@ -199,6 +206,7 @@ class ServerDetail(APIView):
         server = self.get_object(pk)
         server.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+"""
 
 class OSList(APIView):
     permission_classes = [IsAuthenticated]
@@ -425,7 +433,7 @@ class BasisSearchView(APIView):
             return Response('Please add value for search')
         
         basis = Basis.objects.annotate(
-            search=SearchVector('title', 'reg_number', 'basis_file', 'given_by__first_name', 'given_by__last_name')
+            search=SearchVector('title', 'reg_number', 'basis_file')
         ).filter(search=search)
 
         basis_data = BasisSerializer(basis, many=True).data
@@ -458,6 +466,9 @@ class BasisDetail(APIView):
         basis = self.get_object(pk)
         basis.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+"""
+==(ComputerLaptop Model o'chirildi)==
 
 class ComputersLaptopsList(APIView):
     permission_classes = [IsAuthenticated]
@@ -516,7 +527,9 @@ class ComputerLaptopsDetail(APIView):
         computer = self.get_object(pk)
         computer.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
+"""
+"""
+==(Socket o'chirildi)===
     
 class SocketList(APIView):
     permission_classes = [IsAuthenticated]
@@ -574,63 +587,63 @@ class SocketDetail(APIView):
         socket = self.get_object(pk)
         socket.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+"""
 
-class AppServiceList(APIView):
+class ServiceList(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        appservice = AppService.objects.all()
-        serializer = AppServiceSerializer(appservice, many=True)
+        service = Service.objects.all()
+        serializer = ServiceSerializer(service, many=True)
         return Response(serializer.data)
     
     def post(self, request):
-        serializer = AppServiceSerializer(data=request.data)
+        serializer = ServiceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class AppServiceSearchView(APIView):
+class ServiceSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         search = request.query_params.get('search', '')
         if not search:
             return Response('Please add value for search')
-        appservices = AppService.objects.annotate(
-            search=SearchVector('name', 'version', 'service_type')
+        services = Service.objects.annotate(
+            search=SearchVector('name', 'version', 'service_type', 'status')
         ).filter(search=search)
-        appervices_data = AppServiceSerializer(appservices, many=True).data
-        return Response({"Result": appervices_data})
+        services_data = ServiceSerializer(services, many=True).data
+        return Response({"Result": services_data})
 
 
-class AppServiceDetail(APIView):
+class ServiceDetail(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self, pk):
         try:
-            return AppService.objects.get(pk=pk)
-        except AppService.DoesNotExist:
+            return Service.objects.get(pk=pk)
+        except Service.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
     def get(self, request, pk):
-        appservice = self.get_object(pk)
-        serializer = AppServiceSerializer(appservice)
+        service = self.get_object(pk)
+        serializer = ServiceSerializer(service)
         return Response(serializer.data)
     
     def put(self, request, pk):
-        appservice = self.get_object(pk)
-        serializer = AppServiceSerializer(appservice, data=request.data)
+        service = self.get_object(pk)
+        serializer = ServiceSerializer(service, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        appservice = self.get_object(pk)
-        appservice.delete()
+        service = self.get_object(pk)
+        service.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class GlobalSearch(APIView):
@@ -651,12 +664,14 @@ class GlobalSearch(APIView):
         permission = PermissionType.objects.annotate(
             search=SearchVector('name'),
         ).filter(search=search)
-        servers = Server.objects.annotate(
-            search=SearchVector('server_name', 'ip_address', 'os__name', 
-                                'responsible_employee__first_name', 
-                                'responsible_employee__last_name',
-                                'responsible_department__name'),
-        ).filter(search=search)
+
+        """Server chasti ishlamayapti, sababi server model'i o'chirildi"""
+        # servers = Server.objects.annotate(
+        #     search=SearchVector('server_name', 'ip_address', 'os__name',
+        #                         'responsible_employee__first_name',
+        #                         'responsible_employee__last_name',
+        #                         'responsible_department__name'),
+        # ).filter(search=search)
         atms = ATM.objects.annotate(
             search=SearchVector('location', 'model',
                                 'os__name', 'os__version', 'status'),
@@ -664,13 +679,14 @@ class GlobalSearch(APIView):
         oses = OS.objects.annotate(
             search=SearchVector('name', 'version', 'comment')
         ).filter(search=search)
-        computers = ComputerLaptop.objects.annotate(
-            search=SearchVector('device_name', 'netbios_name',
-                                'mac_address', 'ip_address', 'os__name', 'os__version',
-                                'specifications', 'responsible_employee__first_name',
-                                'responsible_employee__last_name', 'responsible_employee__department',
-                                'responsible_employee__department__name')
-        ).filter(search=search)
+        """Computer chasti ishlamayapti, sababi computer model'i o'chirildi"""
+        # computers = ComputerLaptop.objects.annotate(
+        #     search=SearchVector('device_name', 'netbios_name',
+        #                         'mac_address', 'ip_address', 'os__name', 'os__version',
+        #                         'specifications', 'responsible_employee__first_name',
+        #                         'responsible_employee__last_name', 'responsible_employee__department',
+        #                         'responsible_employee__department__name')
+        # ).filter(search=search)
         basis = Basis.objects.annotate(
             search=SearchVector('title', 'given_by', 'reg_number')
         ).filter(search=search)
@@ -680,35 +696,26 @@ class GlobalSearch(APIView):
                                 'permission__name', 
                                 'basis__title', 'basis__reg_number')
         ).filter(search=search)
-        socket = Socket.objects.annotate(
-            search=SearchVector('port', 'protocol')
-        ).filter(search=search)
-        appservice = AppService.objects.annotate(
-            search=SearchVector('name', 'service_type', 'network_sockets__port', 'network_sockets__protocol',
+        service = Service.objects.annotate(
+            search=SearchVector('name', 'service_type', 'version'
                                 'responsible_employee__first_name', 'responsible_employee__last_name')
         ).filter(search=search)
 
         user_data = UserSerializer(users, many=True).data
         department_data = DepartmentSerializer(departments, many=True).data
         permission_data = PermissionTypeSerializer(permission, many=True).data
-        server_data = ServerSerializer(servers, many=True).data
         atm_data = ATMSerializer(atms, many=True).data
         os_data = OSSerializer(oses, many=True).data
-        computer_data = ComputerLaptopSerializer(computers, many=True).data
         basis_data = BasisSerializer(basis, many=True).data
         user_permission_data = UserPermissionSerializer(user_permission, many=True).data
-        socket_data = SocketSerializer(socket, many=True).data
-        appservice_data = AppServiceSerializer(appservice, many=True).data
+        service_data = ServiceSerializer(service, many=True).data
         return Response({
             'users': user_data,
             'departments': department_data,
             'permission': permission_data,
-            'servers': server_data,
             'atms': atm_data,
             'oses': os_data,
-            'computers_devices': computer_data,
             'bases': basis_data,
             'user_permission': user_permission_data,
-            'sockets': socket_data,
-            'appservice': appservice_data
+            'service': service_data
         })

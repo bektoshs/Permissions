@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import Department, User, OS, ComputerLaptop, Basis, UserPermission, Server, \
-    ATM, PermissionType, Socket, AppService
+from .models import Department, User, OS, Hardware, Basis, UserPermission, \
+    ATM, PermissionType, Service, Host, DataBase, Frontend, Backend, AT
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -13,7 +13,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
     """
-    *** Agar bo'lim ya'ni Departmentga ham o'zgartirish kerak bo'lsa pastdagi ishlatiladi. 👍
+    *** Agar bo'lim ya'ni Department'ni o'zgartirish kerak bo'lsa pastdagi ishlatiladi.
     department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
     """
     class Meta:
@@ -28,21 +28,22 @@ class OSSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'version', 'comment']
 
 
-class ServerSerializer(serializers.ModelSerializer):
+class HardwareSerializer(serializers.ModelSerializer):
     responsible_employee = UserSerializer(read_only=True)
-    os_id = serializers.PrimaryKeyRelatedField(
-        queryset=OS.objects.all(),
-        allow_null=True,
-        write_only=True,
-        source='os'
-    )
-    os = OSSerializer(read_only=True)
     responsible_department = DepartmentSerializer(read_only=True)
+    """In hardware I removed os, because it unnecessary"""
+    # os_id = serializers.PrimaryKeyRelatedField(
+    #     queryset=OS.objects.all(),
+    #     allow_null=True,
+    #     write_only=True,
+    #     source='os'
+    # )
+    # os = OSSerializer(read_only=True)
 
     class Meta:
-        model = Server
-        fields = ['id', 'server_name', 'ip_address', 'server_role',
-                  'responsible_employee', 'os', 'os_id', 'responsible_department']
+        model = Hardware
+        fields = ['id', 'name', 'inventor_number', 'model', 'manager', 'manager_ip',
+                  'responsible_employee', 'responsible_department']
 
 
 class ATMSerializer(serializers.ModelSerializer):
@@ -73,49 +74,52 @@ class PermissionTypeSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class ComputerLaptopSerializer(serializers.ModelSerializer):
-    os_id = serializers.PrimaryKeyRelatedField(
-        queryset=OS.objects.all(),
-        write_only=True,
-        allow_null=True,
-        source='os',
-    )
-    responsible_employee = UserSerializer(read_only=True)
-    os = OSSerializer(read_only=True)
-
-    class Meta:
-        model = ComputerLaptop
-        fields = ['id', 'device_name', 'netbios_name', 'mac_address', 'ip_address', 'os', 'os_id',
-                  'specifications', 'responsible_employee', 'responsible_employee_id']
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if instance.os:
-            representation['os'] = OSSerializer(instance.os).data
-        return representation
+"""
+Bu qis ishlamayapti sababi ComputerLaptop model o'chirildi
+"""
+# class ComputerLaptopSerializer(serializers.ModelSerializer):
+#     os_id = serializers.PrimaryKeyRelatedField(
+#         queryset=OS.objects.all(),
+#         write_only=True,
+#         allow_null=True,
+#         source='os',
+#     )
+#     responsible_employee = UserSerializer(read_only=True)
+#     os = OSSerializer(read_only=True)
+#
+#     class Meta:
+#         model = ComputerLaptop
+#         fields = ['id', 'device_name', 'netbios_name', 'mac_address', 'ip_address', 'os', 'os_id',
+#                   'specifications', 'responsible_employee', 'responsible_employee_id']
+#
+#     def to_representation(self, instance):
+#         representation = super().to_representation(instance)
+#         if instance.os:
+#             representation['os'] = OSSerializer(instance.os).data
+#         return representation
 
 
 class BasisSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Basis
-        fields = ['id', 'title', 'reg_number', 'basis_file', 'given_by']
+        fields = ['id', 'title', 'reg_number', 'basis_file']
 
 
 class UserPermissionSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    device = ComputerLaptopSerializer(read_only=True)
+    subject = UserSerializer(read_only=True)
+    object = HardwareSerializer(read_only=True)
     permission = PermissionTypeSerializer(read_only=True)
     basis = BasisSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
+    subject_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         write_only=True,
-        source='user'
+        source='subject'
     )
-    device_id = serializers.PrimaryKeyRelatedField(
-        queryset=ComputerLaptop.objects.all(),
+    object_id = serializers.PrimaryKeyRelatedField(
+        queryset=Hardware.objects.all(),
         write_only=True,
-        source='device'
+        source='object'
     )
     permission_id = serializers.PrimaryKeyRelatedField(
         queryset=PermissionType.objects.all(),
@@ -130,31 +134,70 @@ class UserPermissionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserPermission
-        fields = ['user', 'user_id', 'device', 'device_id', 'permission', 'permission_id', 'basis', 'basis_id']
+        fields = ['subject', 'subject_id', 'object', 'object_id', 'permission', 'permission_id',
+                  'basis_given_by', 'basis', 'basis_id', 'given_date', 'expire_date']
 
     def create(self, validated_data):
         return UserPermission.objects.create(**validated_data)
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
-        response['user'] = UserSerializer(instance.user).data
-        response['device'] = ComputerLaptopSerializer(instance.device).data
+        response['subject'] = UserSerializer(instance.user).data
+        response['object'] = HardwareSerializer(instance.device).data
         response['permission'] = PermissionTypeSerializer(instance.permission).data
         response['basis'] = BasisSerializer(instance.basis).data
         return response
 
 
-class SocketSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Socket
-        fields = ['port', 'protocol']
-
-
-class AppServiceSerializer(serializers.ModelSerializer):
-    network_sockets = SocketSerializer(many=True, read_only=True)
+class ServiceSerializer(serializers.ModelSerializer):
     responsible_employee = UserSerializer(read_only=True)
 
     class Meta:
-        model = AppService
-        fields = ['name', 'version', 'service_type', 'network_sockets', 'responsible_employee']
+        model = Service
+        fields = ['name', 'version', 'service_type', 'status', 'responsible_employee']
+
+
+class HostSerializer(serializers.ModelSerializer):
+    ose = OSSerializer(read_only=True)
+    hardware = HardwareSerializer(read_only=True)
+
+    class Meta:
+        model = Host
+        fields = ['id', 'name', 'hardware', 'ose']
+
+
+class DataBaseSerializer(serializers.ModelSerializer):
+    host = HostSerializer(read_only=True)
+    soft = ServiceSerializer(read_only=True)
+
+    class Meta:
+        model = DataBase
+        fields = ['id', 'name', 'db_model', 'ip_address', 'host', 'soft']
+
+class BackendSerializer(serializers.ModelSerializer):
+    host = HostSerializer(read_only=True)
+    soft = ServiceSerializer(read_only=True)
+
+    class Meta:
+        model = Backend
+        fields = ['id', 'name', 'ip_address', 'host', 'soft']
+
+
+class FrontendSerializer(serializers.ModelSerializer):
+    host = HostSerializer(many=True)
+    soft = ServiceSerializer(many=True)
+
+    class Meta:
+        model = Frontend
+        fields = ['id', 'name', 'ip_address', 'host', 'soft']
+
+
+class ATSerializer(serializers.ModelSerializer):
+    database = DataBaseSerializer(many=True)
+    backend = BackendSerializer(many=True)
+    frontend = FrontendSerializer(many=True)
+    responsible_employee = UserSerializer(many=True)
+
+    class Meta:
+        model = AT
+        fields = ['id', 'name', 'database', 'backend', 'frontend', 'responsible_employee', 'comment']

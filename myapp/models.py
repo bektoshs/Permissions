@@ -31,16 +31,26 @@ class OS(models.Model):
         return str(self.name)
     
     
-class Server(models.Model):
-    server_name = models.CharField(max_length=255)
-    ip_address = models.CharField(max_length=100)
-    server_role = models.CharField(max_length=255)
-    os = models.ForeignKey(OS, on_delete=models.CASCADE)
+class Hardware(models.Model):
+    name = models.CharField(max_length=255)
+    inventor_number = models.CharField(max_length=100)
+    model = models.CharField(max_length=255)
+    manager = models.CharField(max_length=255)
+    manager_ip = models.CharField(max_length=255)
     responsible_employee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     responsible_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return str(self.server_name)
+        return str(self.name)
+
+
+class Host(models.Model):
+    name = models.CharField(max_length=255)
+    hw = models.ForeignKey(Hardware, on_delete=models.CASCADE, related_name="host_hardware")
+    os = models.ForeignKey(OS, on_delete=models.CASCADE, related_name="host_os")
+
+    def __str__(self):
+        return str(self.name)
     
 
 class ATM(models.Model):
@@ -58,36 +68,26 @@ class PermissionType(models.Model):
 
     def __str__(self):
         return str(self.name)
-
-
-class ComputerLaptop(models.Model):
-    device_name = models.CharField(max_length=255)
-    netbios_name = models.CharField(max_length=255, null=True, blank=True)
-    mac_address = models.CharField(max_length=255, null=True, blank=True, unique=True)
-    ip_address = models.CharField(max_length=100, null=True, blank=True)
-    os = models.ForeignKey(OS, on_delete=models.SET_NULL, null=True)
-    specifications = models.TextField(null=True)
-    responsible_employee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-
-    def __str__(self):
-        return str(self.device_name)
     
 
 class UserPermission(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    device = models.ForeignKey(ComputerLaptop, on_delete=models.SET_NULL, null=True, blank=True)
+    subject = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    object = models.ForeignKey(Hardware, on_delete=models.SET_NULL, null=True, blank=True)
     permission = models.ForeignKey(PermissionType, on_delete=models.SET_NULL, null=True, blank=True)
+    basis_given_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                       related_name="bases_given_by")
     basis = models.ForeignKey('Basis', on_delete=models.CASCADE)
+    given_date = models.DateTimeField(auto_now_add=True, blank=True)
+    expire_date = models.DateTimeField()
 
     def __str__(self):
-        return f"{self.user}'s permission"
+        return f"{self.subject}'s permission"
     
 
 class Basis(models.Model):
-    title = models.CharField(max_length=255, blank=True)
+    title = models.CharField(max_length=200)
     reg_number = models.CharField(max_length=100)
     basis_file = models.FileField(upload_to='basis_files/')
-    given_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="given_bases")
 
     # This give randomly name for title
     def save(self, *args, **kwargs):
@@ -97,22 +97,55 @@ class Basis(models.Model):
 
     def __str__(self):
         return f"{self.title}"
-    
-
-class Socket(models.Model):
-    port = models.IntegerField()
-    protocol = models.CharField(max_length=20)
-
-    def __str__(self):
-        return f"({self.protocol}:{self.port})"
 
 
-class AppService(models.Model):
+class Service(models.Model):
     name = models.CharField(max_length=255)
     version = models.CharField(max_length=255)
     service_type = models.CharField(max_length=200)
-    network_sockets = models.ManyToManyField(Socket, related_name='connected_services')
-    responsible_employee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='responsible_employee')
+    status = models.CharField(max_length=100)
     
     def __str__(self):
-        return f"{self.name} {self.version} - {self.network_sockets}"
+        return f"{self.name} {self.version}"
+
+
+class Frontend(models.Model):
+    name = models.CharField(max_length=255)
+    ip_address = models.CharField(max_length=100)
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name="front_host")
+    soft = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="front_soft_service")
+
+    def __str__(self):
+        return f"{self.name} - {self.ip_address}"
+
+
+class Backend(models.Model):
+    name = models.CharField(max_length=255)
+    ip_address = models.CharField(max_length=100)
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name="back_host")
+    soft = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="back_service_soft")
+
+    def __str__(self):
+        return f"{self.name} - {self.ip_address}"
+
+
+class DataBase(models.Model):
+    name = models.CharField(max_length=255)
+    db_model = models.CharField(max_length=255)
+    ip_address = models.CharField(max_length=100)
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name="database_host")
+    soft = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="database_soft_service")
+
+    def __str__(self):
+        return f"{self.name} model: {self.db_model}"
+
+
+class AT(models.Model):
+    name = models.CharField(max_length=255)
+    database = models.ForeignKey(DataBase, on_delete=models.CASCADE, related_name="at_database")
+    backend = models.ForeignKey(Backend, on_delete=models.CASCADE, related_name="at_back")
+    frontend = models.ForeignKey(Frontend, on_delete=models.CASCADE, related_name="at_frontend")
+    comment = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.name}"
