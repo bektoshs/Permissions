@@ -23,8 +23,7 @@ class User(models.Model):
     
     
 class OS(models.Model):
-    name = models.CharField(max_length=255)
-    version = models.CharField(max_length=255, blank=True)
+    name = models.CharField(max_length=100)
     comment = models.TextField(blank=True)
 
     def __str__(self):
@@ -32,16 +31,18 @@ class OS(models.Model):
     
     
 class Hardware(models.Model):
-    name = models.CharField(max_length=255)
     inventor_number = models.CharField(max_length=100)
-    model = models.CharField(max_length=255)
-    manager = models.CharField(max_length=255)
-    manager_ip = models.CharField(max_length=255)
+    serial_number = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
+    status = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+    manager = models.CharField(max_length=100)
+    manager_ip = models.CharField(max_length=100)
     responsible_employee = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     responsible_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return str(self.name)
+        return str(self.model)
 
 
 class Host(models.Model):
@@ -71,8 +72,20 @@ class PermissionType(models.Model):
     
 
 class UserPermission(models.Model):
-    subject = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    object = models.ForeignKey(Hardware, on_delete=models.SET_NULL, null=True, blank=True)
+    OBJECT_TYPE_CHOICES = {
+        ('hardware', 'Hardware'),
+        ('user', 'User'),
+        ('host', 'Host'),
+        ('os', 'Os'),
+        ('backend', 'Backend'),
+        ('frontend', 'Front'),
+        ('database', 'DataBase'),
+        ('at', 'AT')
+    }
+    subject_id = models.IntegerField()
+    subject = models.CharField(max_length=50, choices=OBJECT_TYPE_CHOICES)
+    object_id = models.IntegerField()
+    object = models.CharField(max_length=50, choices=OBJECT_TYPE_CHOICES)
     permission = models.ForeignKey(PermissionType, on_delete=models.SET_NULL, null=True, blank=True)
     basis_given_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                        related_name="bases_given_by")
@@ -110,7 +123,7 @@ class Service(models.Model):
 
 
 class Frontend(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     ip_address = models.CharField(max_length=100)
     host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name="front_host")
     soft = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="front_soft_service")
@@ -120,7 +133,7 @@ class Frontend(models.Model):
 
 
 class Backend(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
     ip_address = models.CharField(max_length=100)
     host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name="back_host")
     soft = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="back_service_soft")
@@ -130,8 +143,8 @@ class Backend(models.Model):
 
 
 class DataBase(models.Model):
-    name = models.CharField(max_length=255)
-    db_model = models.CharField(max_length=255)
+    name = models.CharField(max_length=100)
+    db_model = models.CharField(max_length=100)
     ip_address = models.CharField(max_length=100)
     host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name="database_host")
     soft = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="database_soft_service")

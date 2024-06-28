@@ -3,6 +3,7 @@ from django.urls import path
 from .views import DepartmentList, DepartmentDetail, DepartmentSearchView, \
                     UserList, UserDetail, UserSearchByName, \
                     OSList, OSDetail, OSSearchView, \
+                    HardwareList, HardwareSearchView, HardwareDetail, \
                     ATMList, ATMDetail, ATMSearchView, \
                     PermissionList, PermissionByName, PermissionDetail, UserPermissionList, BasisList,\
                     BasisDetail, BasisSearchView, \
@@ -18,9 +19,9 @@ urlpatterns = [
     path('user/name/', UserSearchByName.as_view(), name='user-by-firstname'),
     path('user/<int:pk>/', UserDetail.as_view(), name='user-detail'),
 
-    # path('servers/', ServerList.as_view(), name='servers-list'),
-    # path('servers/search/', ServerSearchView.as_view(), name='servers-search'),
-    # path('server/<int:pk>/', ServerDetail.as_view(), name='server-detail'),
+    path('hardwares/', HardwareList.as_view(), name='hardwares-list'),
+    path('hardwares/search/', HardwareSearchView.as_view(), name='hardwares-search'),
+    path('hardware/<int:pk>/', HardwareDetail.as_view(), name='hardware-detail'),
 
     path('oses/', OSList.as_view(), name='oses-list'),
     path('oses/search/', OSSearchView.as_view(), name='oses-search'),

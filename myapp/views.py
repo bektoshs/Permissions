@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.postgres.search import SearchVector
 from django.contrib.postgres.search import TrigramSimilarity
+from django.http import Http404
 from .models import Department, OS, User, Hardware, Basis, \
     ATM, PermissionType, UserPermission, Service, Backend, DataBase, Frontend, AT, Host
 from .serializers import OSSerializer, HardwareSerializer, ATMSerializer, \
@@ -140,73 +141,72 @@ class UserDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-"""
-==(Server Model'i o'chirilib tashlandi)==
-class ServerList(APIView):
+class HardwareList(APIView):
 
     def get(self, request):
-        server = Server.objects.all()
-        serializer = ServerSerializer(server, many=True)
+        hardware = Hardware.objects.all()
+        serializer = HardwareSerializer(hardware, many=True)
         return Response(serializer.data)
     
     def post(self, request):
-        serializer = ServerSerializer(data=request.data)
+        serializer = HardwareSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class ServerSearchView(APIView):
+class HardwareSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         search = request.query_params.get('search', '')
         if not search:
-            return Response('Please enter value for search')
+            return Response("Iltimos search'ga qiymat bering")
         
-        servers = Server.objects.annotate(
-            search=SearchVector('server_name', 'ip_address', 'server_role')
+        hardware = Hardware.objects.annotate(
+            search=SearchVector('inventor_number', 'serial_number', 'type', 'status', 'model',
+                                'manager', 'manager_ip',
+                                'responsible_employee__first_name', 'responsible_employee__last_name',
+                                'responsible_department__name')
         ).filter(search=search)
-        servers_data = ServerSerializer(servers, many=True).data
-        return Response({'Result': servers_data})
+        hardware_data = HardwareSerializer(hardware, many=True).data
+        return Response({'Result': hardware_data})
     
 
-class ServerDetail(APIView):
+class HardwareDetail(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self, pk):
         try:
-            return Server.objects.get(pk=pk)
-        except Server.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-    def get(self, pk):
-        server = self.get_object(pk)
-        serialilizer = ServerSerializer(server)
-        return Response(serialilizer.data)
-        
-    # PUT http://127.0.0.1:8000/servers/<int:pk>/
-    # Qachonki serverni ma'lumotlari o'zgartirilayotsa shularni berish majburiy.
-    # {
-    # "server_name": "iABS Prod",
-    # "ip_address": "172.16.50.172",
-    # "server_role": "Raqamli bank"
-    # }
-    
+            return Hardware.objects.get(pk=pk)
+        except Hardware.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, pk):
+        hardware = self.get_object(pk)
+        if isinstance(hardware, Response):
+            return hardware
+        serializer = HardwareSerializer(hardware)
+        return Response(serializer.data)
+
     def put(self, request, pk):
-        server = self.get_object(pk)
-        serializer = ServerSerializer(server, data=request.data)
+        hardware = self.get_object(pk)
+        if isinstance(hardware, Response):
+            return hardware
+        serializer = HardwareSerializer(hardware, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, pk):
-        server = self.get_object(pk)
-        server.delete()
+
+    def delete(self, request, pk):
+        hardware = self.get_object(pk)
+        if isinstance(hardware, Response):
+            return hardware
+        hardware.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-"""
+
 
 class OSList(APIView):
     permission_classes = [IsAuthenticated]
