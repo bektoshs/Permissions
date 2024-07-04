@@ -165,7 +165,6 @@ class UserPermissionSerializer(serializers.ModelSerializer):
 
 
 class ServiceSerializer(serializers.ModelSerializer):
-    responsible_employee = UserSerializer(read_only=True)
 
     class Meta:
         model = Service

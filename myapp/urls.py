@@ -41,13 +41,11 @@ urlpatterns = [
     path('basis/search/', BasisSearchView.as_view(), name='basis-search'),
     path('basis/<int:pk>/', BasisDetail.as_view(), name='basis-detail'),
 
-    path('apps/', ServiceList.as_view(), name='app-service-list'),
-    path('apps/search/', ServiceSearchView.as_view(), name='app-service-search'),
-    path('app/<int:pk>/', ServiceDetail.as_view(), name='app-service-detail'),
+    path('services/', ServiceList.as_view(), name='app-service-list'),
+    path('services/search/', ServiceSearchView.as_view(), name='app-service-search'),
+    path('service/<int:pk>/', ServiceDetail.as_view(), name='app-service-detail'),
 
-    # path('computers/', ComputersLaptopsList.as_view(), name='computers-laptops-list'),
-    # path('computers/search/', ComputerLaptopsSearchView.as_view(), name='computers-search'),
-    # path('computer/<int:pk>/', ComputerLaptopsDetail.as_view(), name='computer-laptop-detail'),
+    path('user-permissions/', UserPermissionList.as_view(), name='users-permissions'),
 
     path('search/', GlobalSearch.as_view(), name='global-search'),
 ]

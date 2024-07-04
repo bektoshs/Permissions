@@ -113,12 +113,15 @@ class UserDetail(APIView):
         try:
             return User.objects.get(pk=pk)
         except User.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-    def get(self, pk):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, pk):
         user = self.get_object(pk)
+        if isinstance(user, Response):
+            return user
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
     """
     Qachonki foydalanuvchini ma'lumotlarinni o'zgartirmoqchi bo'linsa quyidagilar majburiy 
     {
@@ -127,6 +130,7 @@ class UserDetail(APIView):
          "role": "Admin"
     }
     """
+
     def put(self, request, pk):
         user = self.get_object(pk)
         serializer = UserSerializer(user, data=request.data)
@@ -135,7 +139,7 @@ class UserDetail(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self, pk):
+    def delete(self, request, pk):
         user = self.get_object(pk)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -395,16 +399,16 @@ class UserPermissionList(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        queryset = UserPermission.objects.all().prefetch_related('permission')
+        queryset = UserPermission.objects.all()
         serializer = UserPermissionSerializer(queryset, many=True)
         return Response(serializer.data)
     
-    def post(self, request, *args, **kwargs):
-        serializer = UserPermissionSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def post(self, request, *args, **kwargs):
+    #     serializer = UserPermissionSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class BasisList(APIView):
@@ -467,6 +471,7 @@ class BasisDetail(APIView):
         basis.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 """
 ==(ComputerLaptop Model o'chirildi)==
 
@@ -526,66 +531,6 @@ class ComputerLaptopsDetail(APIView):
     def delete(self, request, pk):
         computer = self.get_object(pk)
         computer.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-"""
-"""
-==(Socket o'chirildi)===
-    
-class SocketList(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        socket = Socket.objects.all()
-        serializer = SocketSerializer(socket, many=True)
-        return Response(serializer.data)
-    
-    def post(self, request):
-        serializer = SocketSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-class SocketSearchView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        search = request.query_params.get('search', '')
-        if not search:
-            return Response("Please add value for search")
-        sockets = Socket.objects.annotate(
-            search=SearchVector('port', 'protocol')
-        ).filter(search=search)
-        sockets_data = SocketSerializer(sockets, many=True).data
-        return Response({"Result": sockets_data})
-
-    
-class SocketDetail(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self, pk):
-        try:
-            return Socket.objects.get(pk=pk)
-        except Socket.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-    def get(self, request, pk):
-        socket = self.get_object(pk)
-        serializer = SocketSerializer(socket)
-        return Response(serializer.data)
-    
-    def put(self, request, pk):
-        socket = self.get_object(pk)
-        serializer = SocketSerializer(socket, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, pk):
-        socket = self.get_object(pk)
-        socket.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 """
 
