@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-x=zutc8s(5m^!sq8xi4c$ce-1no3l!w90#8k9u&(^lco+qx+5a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'myapp',
     'import_export',
+    'dal',
+    'dal_select2'
 ]
 
 MIDDLEWARE = [
@@ -76,9 +78,9 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'asset',
+        'NAME': 'perms',
         'USER': 'postgres',
-        'PASSWORD': '0525',
+        'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': '5432',
     }

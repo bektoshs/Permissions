@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Department, User, OS, Hardware, Basis, UserPermission, \
     ATM, PermissionType, Service, Host, DataBase, Frontend, Backend, AT
+from django.contrib.contenttypes.models import ContentType
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -122,8 +123,12 @@ class BasisSerializer(serializers.ModelSerializer):
 
 
 class UserPermissionSerializer(serializers.ModelSerializer):
-    # subject = UserSerializer(read_only=True)
-    # object = HardwareSerializer(read_only=True)
+    object_content_type = serializers.SlugRelatedField(queryset=ContentType.objects.all(), slug_field='model')
+    subject_content_type = serializers.SlugRelatedField(queryset=ContentType.objects.all(), slug_field='model')
+
+    object = serializers.SerializerMethodField()
+    subject = serializers.SerializerMethodField()
+
     permission = PermissionTypeSerializer(read_only=True)
     basis = BasisSerializer(read_only=True)
     # subject_id = serializers.PrimaryKeyRelatedField(
@@ -146,21 +151,37 @@ class UserPermissionSerializer(serializers.ModelSerializer):
         write_only=True,
         source='basis'
     )
+    # basis_given_by = serializers
 
     class Meta:
         model = UserPermission
-        fields = ['subject_id', 'subject', 'object_id', 'object', 'permission', 'permission_id',
-                  'basis_given_by', 'basis', 'basis_id', 'given_date', 'expire_date']
+        fields = '__all__'
+
+    def get_object(self, instance):
+        object_instance = instance.object_content_type.model_class().objects.get(id=instance.object_id)
+        if isinstance(object_instance, User):
+            return f"{object_instance.first_name} {object_instance.last_name}"
+        return object_instance.name
+
+    def get_subject(self, instance):
+        subject_instance = instance.subject_content_type.model_class().objects.get(id=instance.subject_id)
+        if isinstance(subject_instance, User):
+            return f"{subject_instance.first_name} {subject_instance.last_name}"
+        return subject_instance.name
 
     def create(self, validated_data):
         return UserPermission.objects.create(**validated_data)
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
-        response['subject'] = UserSerializer(instance.user).data
-        response['object'] = HardwareSerializer(instance.device).data
+
+        response['object'] = self.get_object(instance)
+        response['subject'] = self.get_subject(instance)
+
         response['permission'] = PermissionTypeSerializer(instance.permission).data
         response['basis'] = BasisSerializer(instance.basis).data
+        del response['object_id']
+        del response['subject_id']
         return response
 
 

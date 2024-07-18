@@ -8,7 +8,7 @@ from django.http import Http404
 from .models import Department, OS, User, Hardware, Basis, \
     ATM, PermissionType, UserPermission, Service, Backend, DataBase, Frontend, AT, Host
 from .serializers import OSSerializer, HardwareSerializer, ATMSerializer, \
-    BasisSerializer, DepartmentSerializer, UserSerializer, PermissionTypeSerializer,\
+    BasisSerializer, DepartmentSerializer, UserSerializer, PermissionTypeSerializer, \
     UserPermissionSerializer, ServiceSerializer, BackendSerializer, DataBaseSerializer, \
     FrontendSerializer, ATSerializer, HostSerializer
 from .permissions import IsSuperPermission, IsReadOnlyPermission
@@ -42,7 +42,7 @@ class DepartmentSearchView(APIView):
         ).filter(search=search)
         departments_data = DepartmentSerializer(departments, many=True).data
         return Response({"Result": departments_data})
-    
+
 
 class DepartmentDetail(APIView):
     permission_classes = [IsAuthenticated]
@@ -52,7 +52,7 @@ class DepartmentDetail(APIView):
             return Department.objects.get(pk=pk)
         except Department.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
+
     def get(self, request, pk):
         department = self.get_object(pk)
         serializer = DepartmentSerializer(department)
@@ -65,26 +65,28 @@ class DepartmentDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, pk):
         department = self.get_object(pk)
         department.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class UserList(APIView):
-    
+
     def get(self, request):
         user = User.objects.all()
         serializer = UserSerializer(user, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializers = UserSerializer(data=request.data)
         if serializers.is_valid():
             serializers.save()
             return Response(serializers.data, status=status.HTTP_201_CREATED)
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class UserSearchByName(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -138,7 +140,7 @@ class UserDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, request, pk):
         user = self.get_object(pk)
         user.delete()
@@ -151,7 +153,7 @@ class HardwareList(APIView):
         hardware = Hardware.objects.all()
         serializer = HardwareSerializer(hardware, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializer = HardwareSerializer(data=request.data)
         if serializer.is_valid():
@@ -167,7 +169,7 @@ class HardwareSearchView(APIView):
         search = request.query_params.get('search', '')
         if not search:
             return Response("Iltimos search'ga qiymat bering")
-        
+
         hardware = Hardware.objects.annotate(
             search=SearchVector('inventor_number', 'serial_number', 'type', 'status', 'model',
                                 'manager', 'manager_ip',
@@ -176,7 +178,7 @@ class HardwareSearchView(APIView):
         ).filter(search=search)
         hardware_data = HardwareSerializer(hardware, many=True).data
         return Response({'Result': hardware_data})
-    
+
 
 class HardwareDetail(APIView):
     permission_classes = [IsAuthenticated]
@@ -219,7 +221,7 @@ class OSList(APIView):
         os = OS.objects.all()
         serializer = OSSerializer(os, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializer = OSSerializer(data=request.data)
         if serializer.is_valid():
@@ -250,7 +252,7 @@ class OSDetail(APIView):
             return OS.objects.get(pk=pk)
         except OS.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-    
+
     def get(self, request, pk):
         os = self.get_object(pk)
         serializer = OSSerializer(os)
@@ -263,7 +265,7 @@ class OSDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, pk):
         os = self.get_object(pk)
         os.delete()
@@ -277,14 +279,14 @@ class ATMList(APIView):
         atm = ATM.objects.all()
         serializer = ATMSerializer(atm, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializer = ATMSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class ATMSearchView(APIView):
     permission_classes = [IsAuthenticated]
@@ -313,7 +315,7 @@ class ATMDetail(APIView):
         atm = self.get_object(pk)
         serializer = ATMSerializer(atm)
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
         atm = self.get_object(pk)
         serializer = ATMSerializer(atm, data=request.data)
@@ -321,7 +323,7 @@ class ATMDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, request, pk, *args, **kwargs):
         atm = self.get_object(pk)
         if isinstance(atm, Response):
@@ -348,21 +350,21 @@ class PermissionList(APIView):
 
 class PermissionByName(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
         search = request.query_params.get('search', '')
         search_type = request.query_params.get('search_type', 'partial')
-        
+
         if not search:
             return Response("Please add value for search")
-        
+
         if search_type == 'exact':
             permission = PermissionType.objects.filter(permission_name__iexact=search)
         else:
             permission = PermissionType.objects.annotate(
                 similarity=TrigramSimilarity('permission_name', search),
-                ).filter(similarity__gt=0.3).order_by('-similarity')
-        
+            ).filter(similarity__gt=0.3).order_by('-similarity')
+
         serializer = PermissionTypeSerializer(permission, many=True)
         return Response(serializer.data)
 
@@ -375,12 +377,12 @@ class PermissionDetail(APIView):
             return PermissionType.objects.get(pk=pk)
         except PermissionType.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
     def get(self, request, pk):
         permission = self.get_object(pk)
         serializer = PermissionTypeSerializer(permission)
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
         permission = self.get_object(pk)
         serializer = PermissionTypeSerializer(permission, data=request.data)
@@ -388,7 +390,7 @@ class PermissionDetail(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, request, pk):
         permission = self.get_object(pk)
         permission.delete()
@@ -402,7 +404,7 @@ class UserPermissionList(APIView):
         queryset = UserPermission.objects.all()
         serializer = UserPermissionSerializer(queryset, many=True)
         return Response(serializer.data)
-    
+
     # def post(self, request, *args, **kwargs):
     #     serializer = UserPermissionSerializer(data=request.data)
     #     if serializer.is_valid():
@@ -418,14 +420,14 @@ class BasisList(APIView):
         basis = Basis.objects.all()
         serializer = BasisSerializer(basis, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializer = BasisSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class BasisSearchView(APIView):
     permission_classes = [IsAuthenticated]
@@ -435,15 +437,15 @@ class BasisSearchView(APIView):
 
         if not search:
             return Response('Please add value for search')
-        
+
         basis = Basis.objects.annotate(
             search=SearchVector('title', 'reg_number', 'basis_file')
         ).filter(search=search)
 
         basis_data = BasisSerializer(basis, many=True).data
         return Response({"Result": basis_data})
-        
-    
+
+
 class BasisDetail(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -452,12 +454,12 @@ class BasisDetail(APIView):
             return Basis.objects.get(pk=pk)
         except Basis.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
     def get(self, request, pk):
         basis = self.get_object(pk)
         serializer = BasisSerializer(basis)
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
         basis = self.get_object(pk)
         serializer = BasisSerializer(basis, data=request.data)
@@ -465,7 +467,7 @@ class BasisDetail(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, request, pk):
         basis = self.get_object(pk)
         basis.delete()
@@ -534,6 +536,7 @@ class ComputerLaptopsDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 """
 
+
 class ServiceList(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -541,14 +544,14 @@ class ServiceList(APIView):
         service = Service.objects.all()
         serializer = ServiceSerializer(service, many=True)
         return Response(serializer.data)
-    
+
     def post(self, request):
         serializer = ServiceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class ServiceSearchView(APIView):
     permission_classes = [IsAuthenticated]
@@ -572,12 +575,12 @@ class ServiceDetail(APIView):
             return Service.objects.get(pk=pk)
         except Service.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
     def get(self, request, pk):
         service = self.get_object(pk)
         serializer = ServiceSerializer(service)
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
         service = self.get_object(pk)
         serializer = ServiceSerializer(service, data=request.data)
@@ -591,6 +594,7 @@ class ServiceDetail(APIView):
         service.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class GlobalSearch(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -599,7 +603,7 @@ class GlobalSearch(APIView):
 
         if not search:
             return Response({'message': 'No search term provided'}, status=400)
-        
+
         users = User.objects.annotate(
             search=SearchVector('first_name', 'last_name', 'department__name'),
         ).filter(search=search)
@@ -638,12 +642,13 @@ class GlobalSearch(APIView):
         user_permission = UserPermission.objects.annotate(
             search=SearchVector('user__first_name', 'user__last_name',
                                 'device', 'device__device_name',
-                                'permission__name', 
+                                'permission__name',
                                 'basis__title', 'basis__reg_number')
         ).filter(search=search)
         service = Service.objects.annotate(
             search=SearchVector('name', 'service_type', 'version'
-                                'responsible_employee__first_name', 'responsible_employee__last_name')
+                                                        'responsible_employee__first_name',
+                                'responsible_employee__last_name')
         ).filter(search=search)
 
         user_data = UserSerializer(users, many=True).data
@@ -654,13 +659,15 @@ class GlobalSearch(APIView):
         basis_data = BasisSerializer(basis, many=True).data
         user_permission_data = UserPermissionSerializer(user_permission, many=True).data
         service_data = ServiceSerializer(service, many=True).data
-        return Response({
-            'users': user_data,
-            'departments': department_data,
-            'permission': permission_data,
-            'atms': atm_data,
-            'oses': os_data,
-            'bases': basis_data,
-            'user_permission': user_permission_data,
-            'service': service_data
-        })
+        return Response(
+            {
+                'users': user_data,
+                'departments': department_data,
+                'permission': permission_data,
+                'atms': atm_data,
+                'oses': os_data,
+                'bases': basis_data,
+                'user_permission': user_permission_data,
+                'service': service_data
+            }
+        )

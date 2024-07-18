@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 import uuid
 
@@ -28,10 +30,10 @@ class OS(models.Model):
 
     def __str__(self):
         return str(self.name)
-    
-    
+
+
 class Hardware(models.Model):
-    inventor_number = models.CharField(max_length=100)
+    inventor_number = models.CharField(max_length=100, null=True, blank=True)
     serial_number = models.CharField(max_length=100)
     type = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
@@ -72,29 +74,27 @@ class PermissionType(models.Model):
     
 
 class UserPermission(models.Model):
-    OBJECT_TYPE_CHOICES = {
-        ('hardware', 'Hardware'),
-        ('user', 'User'),
-        ('host', 'Host'),
-        ('os', 'Os'),
-        ('backend', 'Backend'),
-        ('frontend', 'Front'),
-        ('database', 'DataBase'),
-        ('at', 'AT')
-    }
-    subject_id = models.IntegerField()
-    subject = models.CharField(max_length=50, choices=OBJECT_TYPE_CHOICES)
-    object_id = models.IntegerField()
-    object = models.CharField(max_length=50, choices=OBJECT_TYPE_CHOICES)
     permission = models.ForeignKey(PermissionType, on_delete=models.SET_NULL, null=True, blank=True)
+    basis = models.ForeignKey('Basis', on_delete=models.CASCADE)
     basis_given_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                        related_name="bases_given_by")
-    basis = models.ForeignKey('Basis', on_delete=models.CASCADE)
     given_date = models.DateTimeField(auto_now_add=True, blank=True)
     expire_date = models.DateTimeField()
 
+    # Object (subject that is giving the permission)
+    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='object_permissions',
+                                            default=1)
+    object_id = models.PositiveIntegerField()
+    object = GenericForeignKey('object_content_type', 'object_id')
+
+    # Subject (subject that is receiving the permission)
+    subject_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='subject_permissions',
+                                             default=1)
+    subject_id = models.PositiveIntegerField()
+    subject = GenericForeignKey('subject_content_type', 'subject_id')
+
     def __str__(self):
-        return f"{self.subject}'s permission"
+        return f"{self.subject_id}'s permission to {self.object_id}"
     
 
 class Basis(models.Model):
