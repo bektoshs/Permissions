@@ -6,12 +6,34 @@ from django.contrib.postgres.search import SearchVector
 from django.contrib.postgres.search import TrigramSimilarity
 from django.http import Http404
 from .models import Department, OS, User, Hardware, Basis, \
-    ATM, PermissionType, UserPermission, Service, Backend, DataBase, Frontend, AT, Host
+    ATM, PermissionType, UserPermission, Service, Backend, DataBase, Frontend, AT, Host, \
+    Subnet, IPAddress
 from .serializers import OSSerializer, HardwareSerializer, ATMSerializer, \
     BasisSerializer, DepartmentSerializer, UserSerializer, PermissionTypeSerializer, \
     UserPermissionSerializer, ServiceSerializer, BackendSerializer, DataBaseSerializer, \
-    FrontendSerializer, ATSerializer, HostSerializer
+    FrontendSerializer, ATSerializer, HostSerializer, SubnetSerializer, IPAddressSerializer, AddIpToSubnetSerializer
 from .permissions import IsSuperPermission, IsReadOnlyPermission
+
+
+class SubnetListCreateAPIView(APIView):
+    def get(self, request):
+        subnets = Subnet.objects.all()
+        serializer = SubnetSerializer(subnets, many=True)
+        return Response(serializer.data)
+
+
+class IPAddressListCreateAPIView(APIView):
+    def get(self, request):
+        ip_addresses = IPAddress.objects.all()
+        serializer = IPAddressSerializer(ip_addresses, many=True)
+        return Response(serializer.data)
+
+
+class HostListCreateAPIView(APIView):
+    def get(self, request):
+        host = Host.objects.all()
+        serializer = HostSerializer(host, many=True)
+        return Response(serializer.data)
 
 
 class DepartmentList(APIView):

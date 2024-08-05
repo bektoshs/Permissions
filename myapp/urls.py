@@ -8,7 +8,9 @@ from .views import DepartmentList, DepartmentDetail, DepartmentSearchView, \
                     PermissionList, PermissionByName, PermissionDetail, UserPermissionList, BasisList,\
                     BasisDetail, BasisSearchView, \
                     GlobalSearch, \
-                    ServiceList, ServiceDetail, ServiceSearchView
+                    ServiceList, ServiceDetail, ServiceSearchView, \
+                    SubnetListCreateAPIView, IPAddressListCreateAPIView, \
+                    HostListCreateAPIView
 
 urlpatterns = [
     path('departments/', DepartmentList.as_view(), name='department-list'),
@@ -22,6 +24,8 @@ urlpatterns = [
     path('hardwares/', HardwareList.as_view(), name='hardwares-list'),
     path('hardwares/search/', HardwareSearchView.as_view(), name='hardwares-search'),
     path('hardware/<int:pk>/', HardwareDetail.as_view(), name='hardware-detail'),
+
+    path('hosts/', HostListCreateAPIView.as_view(), name='hosts-list-create'),
 
     path('oses/', OSList.as_view(), name='oses-list'),
     path('oses/search/', OSSearchView.as_view(), name='oses-search'),
@@ -48,4 +52,8 @@ urlpatterns = [
     path('user-permissions/', UserPermissionList.as_view(), name='users-permissions'),
 
     path('search/', GlobalSearch.as_view(), name='global-search'),
+
+    path('subnets/', SubnetListCreateAPIView.as_view(), name='subnet-list-create'),
+
+    path('ipaddresses/', IPAddressListCreateAPIView.as_view(), name='subnet-list-create'),
 ]

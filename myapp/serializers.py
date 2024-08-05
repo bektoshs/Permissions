@@ -1,7 +1,40 @@
+from abc import ABC
+
 from rest_framework import serializers
 from .models import Department, User, OS, Hardware, Basis, UserPermission, \
-    ATM, PermissionType, Service, Host, DataBase, Frontend, Backend, AT
+    ATM, PermissionType, Service, Host, DataBase, Frontend, Backend, AT, Subnet, IPAddress
 from django.contrib.contenttypes.models import ContentType
+
+
+class SubnetSerializer(serializers.ModelSerializer):
+    total_ips = serializers.IntegerField(read_only=True)
+    ip_list = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True
+    )
+
+    class Meta:
+        model = Subnet
+        fields = ['id', 'address', 'total_ips', 'ip_list']
+
+
+class IPAddressSerializer(serializers.ModelSerializer):
+    subnet = SubnetSerializer(read_only=True)
+
+    class Meta:
+        model = IPAddress
+        fields = ['id', 'address', 'subnet']
+
+
+class AddIpToSubnetSerializer(serializers.Serializer):
+    ip_address = serializers.CharField()
+
+    def create(self, validated_data):
+        ip = validated_data.get('ip_address')
+        new_ip = HostSerializer.add_ip_to_subnet(ip)
+        if new_ip:
+            return new_ip
+        raise serializers.ValidationError("Bu IP ga mos tushadigan maska topilmadi")
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -56,10 +89,11 @@ class HardwareSerializer(serializers.ModelSerializer):
 class HostSerializer(serializers.ModelSerializer):
     os = OSSerializer(read_only=True)
     hardware = HardwareSerializer(read_only=True)
+    ips = IPAddressSerializer(many=True, read_only=True)
 
     class Meta:
         model = Host
-        fields = ['id', 'name', 'hardware', 'os']
+        fields = ['id', 'name', 'hardware', 'os', 'ips']
 
 
 class ATMSerializer(serializers.ModelSerializer):

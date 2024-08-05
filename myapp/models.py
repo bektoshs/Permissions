@@ -4,6 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 import uuid
+import ipaddress
 
 
 class Department(models.Model):
@@ -47,13 +48,50 @@ class Hardware(models.Model):
         return str(self.model)
 
 
+class Subnet(models.Model):
+    address = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.address
+
+    def total_ips(self):
+        network = ipaddress.ip_network(self.address, strict=False)
+        return network.network_address
+
+    def ip_list(self):
+        network = ipaddress.ip_network(self.address, strict=False)
+        return [str(ip) for ip in network.hosts()]
+
+    def contains_ip(self):
+        network = ipaddress.ip_network(self.address, strict=False)
+        return ipaddress.ip_address(ip) in network
+
+
+class IPAddress(models.Model):
+    address = models.CharField(max_length=255)
+    subnet = models.ForeignKey(Subnet, on_delete=models.CASCADE, related_name='ips')
+
+    def __str__(self):
+        return self.address
+
+
 class Host(models.Model):
     name = models.CharField(max_length=255)
     hw = models.ForeignKey(Hardware, on_delete=models.CASCADE, related_name="host_hardware")
     os = models.ForeignKey(OS, on_delete=models.CASCADE, related_name="host_os")
+    ips = models.ManyToManyField(IPAddress)
 
     def __str__(self):
         return str(self.name)
+
+    def add_ip_to_subnet(ip):
+        subnets = Subnet.objects.all()
+        for subnet in subnets:
+            if subnet.contains_ip(ip):
+                ip_address = IPAddress(address=ip, subnet=subnet)
+                ip_address.save()
+                return ip_address
+        return None
     
 
 class ATM(models.Model):

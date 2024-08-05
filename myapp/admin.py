@@ -1,9 +1,23 @@
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import User, Department, ATM, OS, PermissionType, UserPermission, \
-    Basis, Service, AT, DataBase, Frontend, Backend, Hardware, Host
+    Basis, Service, AT, DataBase, Frontend, Backend, Hardware, Host, Subnet, IPAddress
 from import_export.admin import ImportExportModelAdmin
 from .forms import UserPermissionsForm
+
+
+@admin.register(Subnet)
+class SubnetAdmin(admin.ModelAdmin):
+    list_display = ('address', 'total_ips')
+
+    def total_ips(self, obj):
+        return obj.total_ips()
+    total_ips.short_description = 'Total IPs'
+
+
+@admin.register(IPAddress)
+class IPAddressAdmin(admin.ModelAdmin):
+    list_display = ('address', 'subnet')
 
 
 @admin.register(User)
@@ -112,6 +126,7 @@ class HardwareData(ImportExportModelAdmin):
 class HostData(ImportExportModelAdmin):
     list_display = ('name', 'hw', 'os')
     search_fields = ('name', 'hw__model', 'os__name')
+    filter_horizontal = ('ips',)
 
 
 @admin.register(PermissionType)
