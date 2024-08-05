@@ -50,9 +50,15 @@ class Hardware(models.Model):
 
 class Subnet(models.Model):
     address = models.CharField(max_length=255)
+    subnet_mask = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.address
+
+    def save(self, *args, **kwargs):
+        network = ipaddress.ip_network(self.address, strict=False)
+        self.subnet_mask = str(network.netmask)
+        super().save(*args, **kwargs)
 
     def total_ips(self):
         network = ipaddress.ip_network(self.address, strict=False)

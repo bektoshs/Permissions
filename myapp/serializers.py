@@ -15,7 +15,13 @@ class SubnetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subnet
-        fields = ['id', 'address', 'total_ips', 'ip_list']
+        fields = ['id', 'address', 'subnet_mask', 'total_ips', 'ip_list']
+
+    def get_total_ips(self, obj):
+        return obj.total_ips()
+
+    def get_ip_list(self, obj):
+        return obj.ip_list()
 
 
 class IPAddressSerializer(serializers.ModelSerializer):
@@ -31,7 +37,7 @@ class AddIpToSubnetSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         ip = validated_data.get('ip_address')
-        new_ip = HostSerializer.add_ip_to_subnet(ip)
+        new_ip = Host.add_ip_to_subnet(ip)
         if new_ip:
             return new_ip
         raise serializers.ValidationError("Bu IP ga mos tushadigan maska topilmadi")

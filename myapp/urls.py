@@ -9,8 +9,9 @@ from .views import DepartmentList, DepartmentDetail, DepartmentSearchView, \
                     BasisDetail, BasisSearchView, \
                     GlobalSearch, \
                     ServiceList, ServiceDetail, ServiceSearchView, \
-                    SubnetListCreateAPIView, IPAddressListCreateAPIView, \
-                    HostListCreateAPIView
+                    SubnetListCreateAPIView, SubnetDetailAPIView, \
+                    IPAddressListCreateAPIView, IPAddressDetailAPIView, \
+                    HostListCreateAPIView, HostDetailAPIView, AddIPToSubnetView
 
 urlpatterns = [
     path('departments/', DepartmentList.as_view(), name='department-list'),
@@ -26,6 +27,7 @@ urlpatterns = [
     path('hardware/<int:pk>/', HardwareDetail.as_view(), name='hardware-detail'),
 
     path('hosts/', HostListCreateAPIView.as_view(), name='hosts-list-create'),
+    path('host/<int:pk>/', HostDetailAPIView.as_view(), name='host-detail'),
 
     path('oses/', OSList.as_view(), name='oses-list'),
     path('oses/search/', OSSearchView.as_view(), name='oses-search'),
@@ -54,6 +56,10 @@ urlpatterns = [
     path('search/', GlobalSearch.as_view(), name='global-search'),
 
     path('subnets/', SubnetListCreateAPIView.as_view(), name='subnet-list-create'),
+    path('subnet/<int:pk>/', SubnetDetailAPIView.as_view(), name='subnet-detail'),
 
-    path('ipaddresses/', IPAddressListCreateAPIView.as_view(), name='subnet-list-create'),
+    path('ipaddresses/', IPAddressListCreateAPIView.as_view(), name='subnets-list-create'),
+    path('ipaddress/<int:pk>/', IPAddressDetailAPIView.as_view(), name='subnet-detail'),
+
+    path('add_ip/', AddIPToSubnetView.as_view(), name='add-ip-to-subnet')
 ]

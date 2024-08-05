@@ -21,6 +21,45 @@ class SubnetListCreateAPIView(APIView):
         serializer = SubnetSerializer(subnets, many=True)
         return Response(serializer.data)
 
+    def post(self, request):
+        serializer = SubnetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubnetDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return Subnet.objects.get(pk=pk)
+        except Subnet.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        subnet = self.get_object(pk)
+        if subnet is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = SubnetSerializer(subnet)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        subnet = self.get_object(pk)
+        if subnet is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = SubnetSerializer(subnet, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        subent = self.get_object(pk)
+        if subent is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        subent.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class IPAddressListCreateAPIView(APIView):
     def get(self, request):
@@ -28,12 +67,99 @@ class IPAddressListCreateAPIView(APIView):
         serializer = IPAddressSerializer(ip_addresses, many=True)
         return Response(serializer.data)
 
+    def post(self, request):
+        serializer = IPAddressSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IPAddressDetailAPIView(APIView):
+    def get_object(self, request, pk):
+        try:
+            ip_address = IPAddress.objects.get(pk=pk)
+        except IPAddress.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        ip_address = self.get_object(pk)
+        if ip_address is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = IPAddressSerializer(ip_address)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        ip_address = self.get_object(pk)
+        if ip_address is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = IPAddressSerializer(ip_address, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        ip_address = self.get_object(pk)
+        if ip_address is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        ip_address.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class HostListCreateAPIView(APIView):
     def get(self, request):
         host = Host.objects.all()
         serializer = HostSerializer(host, many=True)
         return Response(serializer.data)
+
+    def post(self, request):
+        serializer = HostSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HostDetailAPIView(APIView):
+    def get_object(self, pk):
+        try:
+            return Host.objects.get(pk=pk)
+        except Host.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        host = self.get_object(pk)
+        if host is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = HostSerializer(host)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        host = self.get_object(pk)
+        if host is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = HostSerializer(host, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        host = self.get_object(pk)
+        if host is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        host.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AddIPToSubnetView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = AddIpToSubnetSerializer(data=request.data)
+        if serializer.is_valid():
+            new_ip = serializer.save()
+            return Response(IPAddressSerializer(new_ip).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DepartmentList(APIView):
@@ -77,11 +203,15 @@ class DepartmentDetail(APIView):
 
     def get(self, request, pk):
         department = self.get_object(pk)
+        if department is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = DepartmentSerializer(department)
         return Response(serializer.data)
 
     def put(self, request, pk):
         department = self.get_object(pk)
+        if department is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = DepartmentSerializer(department, data=request.data)
         if serializer.is_valid():
             serializer.save()
