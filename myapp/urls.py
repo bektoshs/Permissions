@@ -61,5 +61,6 @@ urlpatterns = [
     path('ipaddresses/', IPAddressListCreateAPIView.as_view(), name='subnets-list-create'),
     path('ipaddress/<int:pk>/', IPAddressDetailAPIView.as_view(), name='subnet-detail'),
 
+    # path('add_ips/', AddIPToSubnetView.as_view(), name='list-ip-to-subnet'),
     path('add_ip/', AddIPToSubnetView.as_view(), name='add-ip-to-subnet')
 ]

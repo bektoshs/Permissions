@@ -11,7 +11,7 @@ from .models import Department, OS, User, Hardware, Basis, \
 from .serializers import OSSerializer, HardwareSerializer, ATMSerializer, \
     BasisSerializer, DepartmentSerializer, UserSerializer, PermissionTypeSerializer, \
     UserPermissionSerializer, ServiceSerializer, BackendSerializer, DataBaseSerializer, \
-    FrontendSerializer, ATSerializer, HostSerializer, SubnetSerializer, IPAddressSerializer, AddIpToSubnetSerializer
+    FrontendSerializer, ATSerializer, HostSerializer, SubnetSerializer, IPAddressSerializer, AddIPToSubnetSerializer
 from .permissions import IsSuperPermission, IsReadOnlyPermission
 
 
@@ -76,9 +76,9 @@ class IPAddressListCreateAPIView(APIView):
 
 
 class IPAddressDetailAPIView(APIView):
-    def get_object(self, request, pk):
+    def get_object(self, pk):
         try:
-            ip_address = IPAddress.objects.get(pk=pk)
+            return IPAddress.objects.get(pk=pk)
         except IPAddress.DoesNotExist:
             return None
 
@@ -96,7 +96,7 @@ class IPAddressDetailAPIView(APIView):
         serializer = IPAddressSerializer(ip_address, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
@@ -154,8 +154,14 @@ class HostDetailAPIView(APIView):
 
 
 class AddIPToSubnetView(APIView):
+
+    # def get(self, request):
+    #     ipa = IPAddress.objects.all()
+    #     serializer = AddIPToSubnetSerializer(ipa, many=True)
+    #     return Response(serializer.data)
+
     def post(self, request, *args, **kwargs):
-        serializer = AddIpToSubnetSerializer(data=request.data)
+        serializer = AddIPToSubnetSerializer(data=request.data)
         if serializer.is_valid():
             new_ip = serializer.save()
             return Response(IPAddressSerializer(new_ip).data, status=status.HTTP_201_CREATED)

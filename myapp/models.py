@@ -68,8 +68,9 @@ class Subnet(models.Model):
         network = ipaddress.ip_network(self.address, strict=False)
         return [str(ip) for ip in network.hosts()]
 
-    def contains_ip(self):
-        network = ipaddress.ip_network(self.address, strict=False)
+    @staticmethod
+    def contains_ip(subnet, ip):
+        network = ipaddress.ip_network(subnet.address, strict=False)
         return ipaddress.ip_address(ip) in network
 
 
@@ -90,10 +91,11 @@ class Host(models.Model):
     def __str__(self):
         return str(self.name)
 
-    def add_ip_to_subnet(ip):
+    @classmethod
+    def add_ip_to_subnet(cls, ip):
         subnets = Subnet.objects.all()
         for subnet in subnets:
-            if subnet.contains_ip(ip):
+            if subnet.contains_ip(subnet, ip):
                 ip_address = IPAddress(address=ip, subnet=subnet)
                 ip_address.save()
                 return ip_address

@@ -73,13 +73,26 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+# MACbook
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'perms',
+#         'USER': 'postgres',
+#         'PASSWORD': '0525',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
+# Windows
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'perms',
+        'NAME': 'db_2',
         'USER': 'postgres',
-        'PASSWORD': '0525',
+        'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': '5432',
     }

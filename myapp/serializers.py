@@ -25,14 +25,15 @@ class SubnetSerializer(serializers.ModelSerializer):
 
 
 class IPAddressSerializer(serializers.ModelSerializer):
-    subnet = SubnetSerializer(read_only=True)
+    subnet = serializers.PrimaryKeyRelatedField(queryset=Subnet.objects.all())
+    # subnet = SubnetSerializer(read_only=True)
 
     class Meta:
         model = IPAddress
         fields = ['id', 'address', 'subnet']
 
 
-class AddIpToSubnetSerializer(serializers.Serializer):
+class AddIPToSubnetSerializer(serializers.Serializer):
     ip_address = serializers.CharField()
 
     def create(self, validated_data):
@@ -40,7 +41,7 @@ class AddIpToSubnetSerializer(serializers.Serializer):
         new_ip = Host.add_ip_to_subnet(ip)
         if new_ip:
             return new_ip
-        raise serializers.ValidationError("Bu IP ga mos tushadigan maska topilmadi")
+        raise serializers.ValidationError("No matching subnet found for this IP")
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -96,10 +97,23 @@ class HostSerializer(serializers.ModelSerializer):
     os = OSSerializer(read_only=True)
     hardware = HardwareSerializer(read_only=True)
     ips = IPAddressSerializer(many=True, read_only=True)
+    # ips_id = serializers.PrimaryKeyRelatedField(
+    #     queryset=IPAddress.objects.all(),
+    #     allow_null=True,
+    #     write_only=True,
+    #     source='ips'
+    # )
+    # ips = IPAddressSerializer(read_only=True)
 
     class Meta:
         model = Host
         fields = ['id', 'name', 'hardware', 'os', 'ips']
+
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     if instance.ips:
+    #         representation['ips'] = IPAddressSerializer(instance.ips.all(), many=True).data
+    #     return representation
 
 
 class ATMSerializer(serializers.ModelSerializer):
