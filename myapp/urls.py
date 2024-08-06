@@ -11,7 +11,8 @@ from .views import DepartmentList, DepartmentDetail, DepartmentSearchView, \
                     ServiceList, ServiceDetail, ServiceSearchView, \
                     SubnetListCreateAPIView, SubnetDetailAPIView, \
                     IPAddressListCreateAPIView, IPAddressDetailAPIView, \
-                    HostListCreateAPIView, HostDetailAPIView, AddIPToSubnetView
+                    HostListCreateAPIView, HostDetailAPIView, AddIPToSubnetView, \
+                    ATListCreateAPIView, ATDetailAPIView
 
 urlpatterns = [
     path('departments/', DepartmentList.as_view(), name='department-list'),
@@ -28,6 +29,9 @@ urlpatterns = [
 
     path('hosts/', HostListCreateAPIView.as_view(), name='hosts-list-create'),
     path('host/<int:pk>/', HostDetailAPIView.as_view(), name='host-detail'),
+
+    path('ats/', ATListCreateAPIView.as_view(), name='at-list-create'),
+    path('at/<int:pk>/', ATDetailAPIView.as_view(), name='at-detail'),
 
     path('oses/', OSList.as_view(), name='oses-list'),
     path('oses/search/', OSSearchView.as_view(), name='oses-search'),

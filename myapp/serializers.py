@@ -24,9 +24,24 @@ class SubnetSerializer(serializers.ModelSerializer):
         return obj.ip_list()
 
 
+class SubnetSerializerForCall(serializers.ModelSerializer):
+
+    class Meta:
+        model = Subnet
+        fields = ['id', 'address', 'subnet_mask']
+
+
 class IPAddressSerializer(serializers.ModelSerializer):
-    subnet = serializers.PrimaryKeyRelatedField(queryset=Subnet.objects.all())
-    # subnet = SubnetSerializer(read_only=True)
+    # subnet = serializers.PrimaryKeyRelatedField(queryset=Subnet.objects.all())
+    subnet = SubnetSerializer(read_only=True)
+
+    class Meta:
+        model = IPAddress
+        fields = ['id', 'address', 'subnet']
+
+
+class IPAddressSerializerForCall(serializers.ModelSerializer):
+    subnet = SubnetSerializerForCall(read_only=True)
 
     class Meta:
         model = IPAddress
@@ -52,7 +67,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    department = DepartmentSerializer(read_only=True)
+    # department = DepartmentSerializer(read_only=True)
+    department = DepartmentSerializer()
     """
     *** Agar bo'lim ya'ni Department'ni o'zgartirish kerak bo'lsa pastdagi ishlatiladi.
     department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
@@ -74,46 +90,15 @@ class HardwareSerializer(serializers.ModelSerializer):
         model = Hardware
         fields = '__all__'
 
-# class HardwareSerializer(serializers.ModelSerializer):
-#     responsible_employee = UserSerializer(read_only=True)
-#     responsible_department = DepartmentSerializer(read_only=True)
-#     """In hardware I removed os, because it unnecessary"""
-#     # os_id = serializers.PrimaryKeyRelatedField(
-#     #     queryset=OS.objects.all(),
-#     #     allow_null=True,
-#     #     write_only=True,
-#     #     source='os'
-#     # )
-#     # os = OSSerializer(read_only=True)
-#
-#     class Meta:
-#         model = Hardware
-#         fields = ['id', 'inventor_number', 'serial_number', 'type', 'status',
-#                   'model', 'manager', 'manager_ip',
-#                   'responsible_employee', 'responsible_department']
-
 
 class HostSerializer(serializers.ModelSerializer):
     os = OSSerializer(read_only=True)
     hardware = HardwareSerializer(read_only=True)
-    ips = IPAddressSerializer(many=True, read_only=True)
-    # ips_id = serializers.PrimaryKeyRelatedField(
-    #     queryset=IPAddress.objects.all(),
-    #     allow_null=True,
-    #     write_only=True,
-    #     source='ips'
-    # )
-    # ips = IPAddressSerializer(read_only=True)
+    ips = IPAddressSerializerForCall(many=True, read_only=True)
 
     class Meta:
         model = Host
         fields = ['id', 'name', 'hardware', 'os', 'ips']
-
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-    #     if instance.ips:
-    #         representation['ips'] = IPAddressSerializer(instance.ips.all(), many=True).data
-    #     return representation
 
 
 class ATMSerializer(serializers.ModelSerializer):
@@ -144,31 +129,6 @@ class PermissionTypeSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-"""
-Bu qism ishlamayapti sababi ComputerLaptop model o'chirildi
-"""
-# class ComputerLaptopSerializer(serializers.ModelSerializer):
-#     os_id = serializers.PrimaryKeyRelatedField(
-#         queryset=OS.objects.all(),
-#         write_only=True,
-#         allow_null=True,
-#         source='os',
-#     )
-#     responsible_employee = UserSerializer(read_only=True)
-#     os = OSSerializer(read_only=True)
-#
-#     class Meta:
-#         model = ComputerLaptop
-#         fields = ['id', 'device_name', 'netbios_name', 'mac_address', 'ip_address', 'os', 'os_id',
-#                   'specifications', 'responsible_employee', 'responsible_employee_id']
-#
-#     def to_representation(self, instance):
-#         representation = super().to_representation(instance)
-#         if instance.os:
-#             representation['os'] = OSSerializer(instance.os).data
-#         return representation
-
-
 class BasisSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -185,16 +145,6 @@ class UserPermissionSerializer(serializers.ModelSerializer):
 
     permission = PermissionTypeSerializer(read_only=True)
     basis = BasisSerializer(read_only=True)
-    # subject_id = serializers.PrimaryKeyRelatedField(
-    #     queryset=User.objects.all(),
-    #     write_only=True,
-    #     source='subject'
-    # )
-    # object_id = serializers.PrimaryKeyRelatedField(
-    #     queryset=Hardware.objects.all(),
-    #     write_only=True,
-    #     source='object'
-    # )
     permission_id = serializers.PrimaryKeyRelatedField(
         queryset=PermissionType.objects.all(),
         write_only=True,
@@ -247,8 +197,8 @@ class ServiceSerializer(serializers.ModelSerializer):
 
 
 class FrontendSerializer(serializers.ModelSerializer):
-    host = HostSerializer(many=True)
-    soft = ServiceSerializer(many=True)
+    host = HostSerializer()
+    soft = ServiceSerializer()
 
     class Meta:
         model = Frontend
@@ -256,8 +206,8 @@ class FrontendSerializer(serializers.ModelSerializer):
 
 
 class BackendSerializer(serializers.ModelSerializer):
-    host = HostSerializer(read_only=True)
-    soft = ServiceSerializer(read_only=True)
+    host = HostSerializer()
+    soft = ServiceSerializer()
 
     class Meta:
         model = Backend
@@ -265,8 +215,8 @@ class BackendSerializer(serializers.ModelSerializer):
 
 
 class DataBaseSerializer(serializers.ModelSerializer):
-    host = HostSerializer(read_only=True)
-    soft = ServiceSerializer(read_only=True)
+    host = HostSerializer()
+    soft = ServiceSerializer()
 
     class Meta:
         model = DataBase
@@ -274,10 +224,9 @@ class DataBaseSerializer(serializers.ModelSerializer):
 
 
 class ATSerializer(serializers.ModelSerializer):
-    database = DataBaseSerializer(many=True)
-    backend = BackendSerializer(many=True)
-    frontend = FrontendSerializer(many=True)
-    responsible_employee = UserSerializer(many=True)
+    database = DataBaseSerializer()
+    backend = BackendSerializer()
+    frontend = FrontendSerializer()
 
     class Meta:
         model = AT
